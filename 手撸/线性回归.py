@@ -1,46 +1,44 @@
-import math
 import torch
 import random
 
-'''
-w1 w2 w3 
-b
-'''
-
+# 设置一个真实的w与b
+true_w = torch.tensor([4.2, -2.9])
+true_b = 9.7
 
 # 生成随机数据
-examples = 10000
-true_w = torch.tensor([2.1, -3.2, 4.2])
-true_b = 2.989
-def synthetic_data(w, b ,num_examples):
-    x = torch.normal(0, 1, (num_examples, len(w))) # 10000 * 3
-    y = torch.matmul(x, w) + b
-    y += torch.normal(0 ,0.01, y.shape)
-    return x, y.reshape((-1, 1))
+def gen_data(w, b, num_examples):
+    '''
+    :return:
+    1. num_examples*特征数 的矩阵
+    2. num_examples*1 的矩阵
+    '''
+    X = torch.normal(0, 1, (num_examples, len(w)))
+    y = torch.matmul(X, w) + b
+    y += torch.normal(0, 0.02, y.shape)
+    return X, y.reshape(-1,1)
 
-features, labels = synthetic_data(true_w, true_b, examples)
+features, labels = gen_data(true_w, true_b, 1000)
 
-# 获取小批量的数据
-def get_batch(batch_size, features, labels):
+# 批量化处理
+def get_batch(features, labels, batch_size):
     num_examples = len(features)
     index = list(range(num_examples))
     random.shuffle(index)
     for i in range(0, num_examples, batch_size):
-        batch_index = torch.tensor(index[i:min(i+batch_size, num_examples)])
-        yield features[batch_index], labels[batch_index]
+        ii = torch.tensor(index[i:min(i+batch_size, num_examples)])
+        yield features[ii], labels[ii]
 
-batch_size = 30
-for X, y in get_batch(batch_size, features, labels):
-    print(X, '\n', y)
-    break
+# 随机生成w与b
+w = torch.normal(0, 0.01, (1,2), requires_grad=True)
+b = torch.zeros(1, requires_grad=True)
 
 # 定义模型
-def model(X, w, b):
-    return torch.matmul(X, w.T) + b # 10000 * 1
+def model(features):
+    return torch.matmul(features, w.T) + b
 
 # 定义损失函数
 def loss(y_hat, y):
-    return (y_hat.reshape(y.shape) - y) ** 2 / 2
+    return (y_hat - y) ** 2 / 2
 
 # 定义优化器
 def sgd(params, lr, batch_size):
@@ -49,20 +47,21 @@ def sgd(params, lr, batch_size):
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
-# 初始化参数
-w = torch.normal(0, 0.01, (1, 3), requires_grad=True)
-b = torch.zeros(1, requires_grad=True)
-
 # 训练
-lr = 0.01
-epoches = 3
-for epoch in range(epoches):
-    for X, y in get_batch(batch_size, features, labels):
-        y_hat = model(X, w, b)
-        l = loss(y_hat, y)
-        l.sum().backward() # 10000*1 二维变一维
-        sgd([w, b], lr, batch_size) # optim.step()
-    with torch.no_grad():
-        train_y = model(features, w, b)
-        train_loss = loss(train_y, labels)
-        print(f'epoch: {epoch + 1} | loss: {train_loss.mean()}')
+def train(features, labels, num_epochs, batch_size, lr=0.01):
+    # 训练
+    for epoch in range(num_epochs):
+        for X, y in get_batch(features, labels, batch_size=batch_size):
+            y_hat = model(X)
+            l = loss(y_hat, y)
+            l.sum().backward()
+            sgd([w, b], lr, batch_size)
+        # 每轮进行一次评估
+        with torch.no_grad():
+            l = loss(model(features), labels)
+            print(f'epoch: {epoch + 1} | train_loss: {l.mean()}')
+
+if __name__ == '__main__':
+    num_epochs = 3
+    batch_size = 20
+    train(features, labels, num_epochs, batch_size, lr=0.02)
