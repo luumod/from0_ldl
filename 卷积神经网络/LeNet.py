@@ -4,6 +4,7 @@ import torch.nn as nn
 from torchvision import transforms
 import torchvision
 from torch.utils import data
+import numpy as np
 
 model = nn.Sequential(
     nn.Conv2d(1, 6, kernel_size=5, padding=2), # 6*28*28
