@@ -1,9 +1,6 @@
 import os
-
 import torch
-
 from text_preprocessing import tokenize, Vocabulary, ST
-import matplotlib.pyplot as plt
 
 def process_eng_fra_dataset(normal_unicode = None, lowercase=True, max_sample_pair_num = None):
     dataset = 'eng_fra.txt'
@@ -118,41 +115,3 @@ def nmt_eng_fra_dataloader(batch_size, seq_length, num_workers = 4,max_simple_pa
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
     return dataloader, eng_vocab, fra_vocab
-
-if __name__ == '__main__':
-    data_iter, eng_vocab, fra_vocab = nmt_eng_fra_dataloader(batch_size=2, seq_length=20)
-
-    print(f'英文词表大小：{len(eng_vocab)}')
-    print(f'法文词表大小：{len(fra_vocab)}\n')
-
-    '''
-    eng_encoded_lines: [232736, 20]
-    eng_valid_len:     [232736, ]
-    '''
-    for eng_encoded_lines, eng_valid_len, fra_encoded_lines, fra_valid_len in data_iter:
-        print(f'英文句子编码值：{eng_encoded_lines.tolist()}')
-        print(f'英文句子有效长度：{eng_valid_len.tolist()}')
-        print(f'英文句子解码（去除填充词元）：'
-              f'{[" ".join(eng_vocab.decode(line[:length].tolist())) for line, length in zip(eng_encoded_lines, eng_valid_len)]}\n')
-
-        print(f'法文句子编码值：{fra_encoded_lines.tolist()}')
-        print(f'法文句子有效长度：{fra_valid_len.tolist()}')
-        print(f'法文句子解码（去除填充词元）：'
-              f'{[" ".join(fra_vocab.decode(line[:length].tolist())) for line, length in zip(fra_encoded_lines, fra_valid_len)]}')
-
-        break
-
-    # 运行结果
-    # 英文词表大小：11881
-    # 法文词表大小：20839
-    #
-    # 英文句子编码值：[[8, 1039, 15, 8, 1038, 643, 7, 319, 567, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    #                 [20, 1236, 8, 6112, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-    # 英文句子有效长度：[11, 6]
-    # 英文句子解码（去除填充词元）：['the leaves of the trees began to turn red . <EOS>', "don't feed the pigeons . <EOS>"]
-    #
-    # 法文句子编码值：[[24, 1869, 36, 1487, 5077, 11, 646, 2378, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    #                 [10, 8366, 8, 24, 7836, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-    # 法文句子有效长度：[10, 7]
-    # 法文句子解码（去除填充词元）：['les feuilles des arbres commencèrent à devenir rouges . <EOS>',
-    #                             'ne nourrissez pas les pigeons . <EOS>']

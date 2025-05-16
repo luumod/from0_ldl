@@ -19,3 +19,4 @@ def timemachine_data_loader(batch_size, seq_length, shuffle=False, max_token_num
     data_iter = DataLoader(TextDataset(corpus, seq_length), batch_size=batch_size, shuffle=shuffle, drop_last=True) # 丢弃不完整的最后一个批次
     return data_iter, vocab
 
+

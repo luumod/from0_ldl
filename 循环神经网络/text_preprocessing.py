@@ -10,8 +10,6 @@ def remove_non_alpha_and_lower(string):
     import re
     return re.sub(r'[^a-zA-Z]+', ' ', string).strip().lower()
 
-print(remove_non_alpha_and_lower("    12Yuleo daDW dawn dihawjhiu 8 d8db hyd7"))
-
 def get_timemachine_lines(line_processor: Callable[[str], str] = remove_non_alpha_and_lower):
     import os
     url = r'https://d2l-data.s3-accelerate.amazonaws.com/timemachine.txt'
